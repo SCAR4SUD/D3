@@ -1,3 +1,0 @@
-pkcs11-tool --modul ../../../include/libsofthsm2.so --login --pin "12345" --write-object hsm_private.pem --type privkey --id 01 
-
-pkcs11-tool --module /usr/lib/softhsm/libsofthsm2.so --login --pin "12345" --write-object hsm_public.pem --type pubkey --id 01 
