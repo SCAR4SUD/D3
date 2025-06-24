@@ -1,0 +1,3 @@
+{"uri": "10.0.0.1", "action": "ACCEPT"}
+{"uri": "10.0.0.2", "action": "ALERT"}
+{"uri": "10.0.0.3", "action": "ACCEPT"}
