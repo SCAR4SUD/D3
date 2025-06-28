@@ -1,0 +1,12 @@
+{
+  "email": {
+    "smtp_server": "smtp.gmail.com",
+    "smtp_port": 587,
+    "use_tls": true,
+    "username": "USE .ENV",
+    "password": "USE .ENV",
+    "from": "set_mail@mail.mail",
+    "to": ["mailinglist@mail.mail"]
+  }
+}
+

@@ -1,0 +1,15 @@
+# configuration-pre-prod.yml
+service:
+  name: "UserAPI-PreProd"
+  version: "1.3.0-rc1"
+database:
+  host: "db.preprod.example.com"
+  port: 5432
+  user: "preprod_user"
+  password: "PreProd$ecret"
+features:
+  enable_signup: true
+  max_connections: 100
+logging:
+  level: "WARN"
+  file: "/var/log/userapi/preprod.log"

@@ -1,0 +1,15 @@
+# configuration-prod.yml
+service:
+  name: "UserAPI"
+  version: "1.2.0"
+database:
+  host: "db.prod.example.com"
+  port: 5432
+  user: "prod_user"
+  password: "Prod$ecret"
+features:
+  enable_signup: true
+  max_connections: 200
+logging:
+  level: "ERROR"
+  file: "/var/log/userapi/prod.log"

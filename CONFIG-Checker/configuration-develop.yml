@@ -1,0 +1,15 @@
+# configuration-develop.yml
+service:
+  name: "UserAPI-Dev"
+  version: "1.4.0-beta"
+database:
+  host: "localhost"
+  port: 5432
+  user: "dev_user"
+  password: "Dev$ecret"
+features:
+  enable_signup: false
+  max_connections: 50
+logging:
+  level: "DEBUG"
+  file: "./logs/dev.log"
