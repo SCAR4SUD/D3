@@ -1,142 +1,155 @@
-# Security Testing – Regole in conformità a ISO/IEC 27002
+# Framework Security Testing OWASP (WSTF)
 
-## 1. Governance e Policy
-1. **POL-ST-01 – Politica di Security Testing**  
-   * **MUST** esistere un documento approvato dal CISO che definisce: scopo, ambito applicativo, ruoli, severità/classificazione delle vulnerabilità e tempistiche di remediation.  
-   * **MUST** essere riesaminato almeno annualmente o dopo incidenti / major release.
+## 0 · Il framework in sintesi
 
-2. **POL-ST-02 – Ruoli e Responsabilità**  
-   * *Dev Team* → esegue test statici, revisione codice e correzioni.  
-   * *Security Team* → supervisiona, fornisce tool, conduce DAST e pen-test.  
-   * *QA* → verifica criteri di accettazione sicurezza prima del Go-Live.  
-   * *Change Advisory Board (CAB)* → valuta esiti test in fase di rilascio.
+Il WSTF distribuisce il lavoro di sicurezza **in cinque fasi dello SDLC** invece di confinarlo a un unico penetration test finale.  
+Ogni fase ha un **“gate”**: la release non avanza finché i criteri di uscita non sono soddisfatti.
 
 ---
 
-## 2. Pianificazione basata sul rischio
-3. **RISK-ST-01 – Threat Modeling iniziale**  
-   * **MUST** essere effettuato per ogni nuovo progetto o modifica di rilievo (> 25 % LOC).  
-   * **SHOULD** usare metodologie STRIDE, LINDDUN o OWASP Threat Dragon.
+## Fase 1 — Prima che inizi lo sviluppo
 
-4. **RISK-ST-02 – Piano di Test di Sicurezza**  
-   * **MUST** derivare dal threat modeling e indicare copertura minima (es. 100 % delle API critiche), tool, responsabilità e metriche.  
-   * **MUST** essere approvato prima di scrivere codice.
+| Sotto‑fase | Obiettivi chiave | Deliverable | Strumenti consigliati |
+|-----------|-----------------|-------------|-----------------------|
+| **1.1 Definire un SDLC** | Formalizzare il modello di sviluppo e rendere la sicurezza un attributo di qualità intrinseco. | Documento di politica SDLC; standard di codice sicuro. | Analisi gap ISO/IEC 33020; template SDL. |
+| **1.2 Rivedere policy & standard** | Verificare l’esistenza di standard di linguaggio e crittografia; colmare eventuali lacune. | Secure coding standard (Java, .NET, Go…), baseline crittografica, policy di gestione dipendenze. | OWASP ASVS; NIST SP 800‑218 (SSDF). |
+| **1.3 Definire metriche** | Decidere **prima del codice** cosa misurare (es. densità vulnerabilità, MTTR) e come tracciare. | Piano di misurazione; campi Jira; schema dashboard. | SonarQube Quality Gates; OWASP DefectDojo. |
 
----
+### Criteri di successo
+* Almeno un KPI di sicurezza misurabile per *release train*.  
+* Policy approvate dall’architecture board.
 
-## 3. Integrazione “Shift-Left” nel SDLC
-5. **SDLC-ST-01 – Commit Gate**  
-   * **MUST** includere SAST e software-composition-analysis (SCA) automatici su ogni push.  
-   * La build fallisce se vulnerabilità ad alta criticità non sono sanate o dispensate.
-
-6. **SDLC-ST-02 – Build & CI/CD**  
-   * **MUST** eseguire DAST su ambienti di staging tramite pipeline; risultati archiviati.  
-   * **SHOULD** integrare test IaC, container scan e fuzzing per servizi esposti.
-
-7. **SDLC-ST-03 – Pre-Production Gate**  
-   * **MUST** prevedere penetration test manuale o red-team mirato per release major o applicazioni “alto impatto” (dati personali, pagamento).  
-   * Go-Live consentito solo dopo chiusura/accettazione delle issue critiche.
+### Esempi di metriche
+* % user story con abuso‑case collegato.  
+* Difetti critici < 0,3/KSLOC nelle scansioni pre‑merge.
 
 ---
 
-## 4. Ambiente di test e dati
-8. **ENV-ST-01 – Separazione degli ambienti**  
-   * **MUST** esserci segregazione fisica o logica tra produzione, test e sviluppo.  
-   * Accesso privilegiato con MFA e logging centralizzato.
+## Fase 2 — Durante definizione e design
 
-9. **ENV-ST-02 – Protezione dei dati di test** (controllo 8.29)  
-   * **MUST** usare dataset sintetici o mascherati; vietata copia full-prod.  
-   * **SHOULD** applicare crittografia *at-rest* e *in-transit* alle basi di test.
+### 2.1 Revisione requisiti di sicurezza
+Controlla completezza e univocità di:
+* gestione utenti & autenticazione
+* autorizzazione
+* confidenzialità & integrità dei dati
+* accountability & gestione sessioni
+* sicurezza del trasporto
+* segregazione a livelli
+* conformità legale (privacy, settore, ecc.)
 
----
+**Deliverable:** Security Story Map firmata; catalogo di Abuso‑Case; test di accettazione.
 
-## 5. Esecuzione dei test
-10. **EXEC-ST-01 – Tipi di test minimi**
+### 2.2 Revisione design & architettura
+Valuta C4/ADRs/DFD: cerca decisioni authZ distribuite e punti di validazione; proponi servizi centrali dove possibile.
 
-| Fase          | Test obbligatori         | Tool / Tecniche consigliate                       |
-| ------------- | ------------------------ | ------------------------------------------------- |
-| Code → Build  | SAST, SCA               | Semgrep, SonarQube, GitHub Dependabot             |
-| Staging       | DAST, IAST              | OWASP ZAP, Burp Suite, Contrast                   |
-| Pre-Prod      | Pen-test, fuzzing mirato | Kali / Pwntools, Jazzer                           |
+**Strumenti:** Threat‑Dragon, IriusRisk, ArchiMate.
 
-Le deviazioni **MUST** essere documentate e approvate dal Security Lead.
+### 2.3 Creare & rivedere modelli UML
+Assicurati che i diagrammi riflettano i flussi reali; sincronizza con il threat model.
 
-11. **EXEC-ST-02 – Indipendenza dei tester**  
-    * **MUST** esserci separazione di compiti: chi scrive il codice non approva i propri test di sicurezza critici.  
-    * Pen-test **SHOULD** essere eseguito da team esterno almeno una volta l’anno.
+### 2.4 Creare & rivedere threat model
+Metodo STRIDE‑per‑elemento o PASTA. **Report:** rischi, contromisure, rischi residui firmati dal business.
 
----
-
-## 6. Gestione dei risultati
-12. **RES-ST-01 – Tracking vulnerabilità**  
-    * **MUST** utilizzare un unico sistema (es. Jira Security) collegato alla pipeline.  
-    * Ogni finding include CWE/CVSS, evidenza e raccomandazione di fix.
-
-13. **RES-ST-02 – SLA di remediation**
-
-| Gravità (CVSS)       | Tempo massimo di correzione |
-| -------------------- | --------------------------- |
-| ≥ 9.0 (Critica)      | 7 giorni di calendario      |
-| 7.0 – 8.9 (Alta)     | 30 giorni                   |
-| 4.0 – 6.9 (Media)    | 90 giorni                   |
-| < 4.0 (Bassa)        | Nel backlog ordinario       |
-
-Eccezioni **MUST** essere motivate e firmate da CISO o equivalente.
+### Gate d’uscita
+* Tutte le minacce **HIGH/Critical** hanno mitigazione o accettazione firmata.  
+* Verbale di arch‑review in Confluence.
 
 ---
 
-## 7. Metriche e reporting
-14. **MET-ST-01 – Indicatori chiave**  
-    * **MUST** misurare:  
-      * Percentuale di build fallite per vulnerabilità > Alta.  
-      * Tempo medio di remediation vs. SLA.  
-      * Copertura test di sicurezza (LOC, API, componenti).  
-    * Report mensile alla direzione; il trend **SHOULD** alimentare il programma di miglioramento continuo.
+## Fase 3 — Durante lo sviluppo
+
+| Attività | Cosa fare | Tool tipici |
+|---------|-----------|-------------|
+| **3.1 Code walkthrough** | Dev & Security analizzano la feature branch: logica e flusso, non sintassi. | Pair programming, review ADR. |
+| **3.2 Static code review** | Confronta il codice con requisiti CIA, OWASP Top 10, pitfall di linguaggio, normative di settore. | Semgrep, CodeQL, SonarQube, Talisman (secret scan). |
+
+> L’analisi statica è il miglior compromesso costo/beneficio e dipende poco dall’abilità del tester.
+
+### Hook CI
+* **Pre‑commit:** scanner segreti.  
+* **Pull request:** SAST + dependency check.  
+* **Nightly:** SCA ramo completo (Syft + Grype).
+
+### Gate d’uscita
+* Nessun issue SAST **Critical** aperto.  
+* Issue **High** collegate a ticket Jira con owner.
 
 ---
 
-## 8. Tooling e manutenzione
-15. **TOOL-ST-01 – Registro Tool**  
-    * **MUST** elencare versioni, owner, licenze, date di aggiornamento e rad/rollback plan.  
-    * Aggiornamenti critici di firma (es. SCA) **MUST** avvenire ≤ 24 h dal rilascio.
+## 5 · Fase 4 — Durante il deployment
+
+1. **4.1 Penetration test applicativo** – Black/grey‑box su ambiente «production like»; include abusi di logica e fuzzing API.  
+2. **4.2 Test di configuration management** – Esamina IaC, immagini container e runtime config; verifica benchmark CIS e rotazione segreti.
+
+### Controlli in pipeline
+* Fai fallire il deploy se l’immagine container viola policy > Medium in Trivy/Kube‑Bench.  
+* Genera automaticamente SBOM e firma artefatti (Sigstore).
+
+### Gate d’uscita
+* Report pentest: nessuna finding **Critical/High** sfruttabile.  
+* Tutte le config in VCS e peer‑review.
 
 ---
 
-## 9. Formazione e consapevolezza
-16. **TRN-ST-01 – Training obbligatorio**  
-    * Dev e QA: **MUST** corso OWASP Top-10, MISRA 2012, altri corsi specifici nel settore automotive, secure coding entro 3 mesi dall’assunzione e refresh annuale.  
-    * Security Champions in ogni squadra **SHOULD** ricevere training avanzato (SANS, OSWE, etc.).
+## Fase 5 — Manutenzione & operazioni
+
+| Sotto‑fase | Focus operativo | Artefatti |
+|-----------|----------------|-----------|
+| **5.1 Operational management review** | Patching, rotazione segreti, runbook incidenti. | SOP di sicurezza Ops. |
+| **5.2 Health check periodici** | Riesami mensili/trimestrali di app e infrastruttura. | DAST automatico; report di drift compliance. |
+| **5.3 Verifica dei change** | Test di sicurezza integrati nel change‑management e smoke test post‑deploy. | Ticket change con sign‑off sicurezza. |
 
 ---
 
-## 10. Gestione dei fornitori
-17. **SUP-ST-01 – Requisiti contrattuali**  
-    * Contratti di sviluppo esterno **MUST** imporre il rispetto delle regole di questo documento e permettere audit.  
-    * Fornitori critici **SHOULD** fornire report SAST/DAST prima della consegna.
+## Consigli di implementazione Agile & DevSecOps
+
+* Definisci una **“Security Definition of Done”** e collegala al backlog di sprint.  
+* Nomina un **Security Champion** per squadra; ruota ogni trimestre.  
+* Automatizza tutto il possibile; riserva i test manuali alla logica di business.  
+* Imposta **librerie "paved‑road"** pre‑configurate in modo sicuro.  
+* Conduci *post‑mortem* senza colpe per ogni vulnerabilità sfuggita.
 
 ---
 
-## 11. Cambio, rilascio e accettazione
-18. **REL-ST-01 – Security-Go/No-Go**  
-    * CAB **MUST** verificare checklist di sicurezza firmata (test superati, SLA rispettati, documentazione aggiornata).  
-    * Quality **MAY** bloccare il rilascio, se individua metriche non del tutto conformi
-    * In caso di “No-Go” da parte del team di Quality il rilascio è bloccato finché le non-conformità non siano risolte o formalmente accettate.
+## Glossario rapido
+
+* **ASVS** – Application Security Verification Standard di OWASP.  
+* **SAST / DAST / IAST** – Static / Dynamic / Interactive Application Security Testing.  
+* **SBOM** – Software Bill of Materials.  
+* **SCA** – Software Composition Analysis.  
+* **STRIDE** – Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of privilege.
 
 ---
 
-## 12. Conservazione evidence e audit
-19. **AUD-ST-01 – Log e report**  
-    * Evidenze di test, scanner output, pen-test report e approvazioni **MUST** essere conservate ≥ 3 anni; accesso solo “need-to-know”.
+## Altre risorse consultabili
+
+* OWASP Application Security Verification Standard 4.0.  
+* NIST Secure Software Development Framework SP 800‑218.  
+* Documentazione Microsoft Threat Modeling Tool. 
+* Automotive ISAC ATM (Automotive Threat Matrix)
 
 ---
 
-## 13. Continual Improvement
-20. **IMP-ST-01 – Post-mortem & Lessons Learned**  
-    * Dopo ogni incidente o fail di release **MUST** esserci review di causa radice e aggiornamento processo/policy entro 30 giorni.
+## Top 10 vulnerabilità in ambito automotive secondo OWASP
+
+| # | Vulnerabilità | Descrizione sintetica |
+|---|---------------|-----------------------|
+| 1 | **Protocolli di comunicazione veicolo deboli** | I bus (es. CAN) non dispongono di autenticazione/cripto robuste → possibili comandi non autorizzati a freni, sterzo, ecc. |
+| 2 | **Aggiornamenti Over‑the‑Air (OTA) insicuri** | Mancano autenticazione e cifratura negli update OTA → un aggressore può iniettare firmware malevolo. |
+| 3 | **Sistemi telematici insicuri** | Unità telematica o API cloud con controlli insufficienti → accesso remoto a dati o impostazioni veicolo. |
+| 4 | **Vulnerabilità nella supply chain software** | Componenti terze parti vulnerabili nell’infotainment o ECU → esecuzione di codice arbitrario. |
+| 5 | **Exploit con accesso fisico** | Tramite porta OBD‑II o altri connettori si possono alterare parametri o firmware. |
+| 6 | **Meccanismi di controllo accessi inadeguati** | Policy debole nei servizi o app mobile → escalation di privilegi non autorizzata. |
+| 7 | **Meccanismi di autenticazione implementati male** | Password deboli o token prevedibili su app/servizi remoti → takeover account. |
+| 8 | **Perdite di dati e violazioni privacy** | Canali di trasmissione o storage cloud non sicuri → esposizione di posizione e dati personali. |
+| 9 | **Mancanza di sicurezza nei sistemi integrati** | Integrazione (infotainment, navigazione) senza confini chiari → pivot verso sistemi critici. |
+|10 | **Sistemi legacy insicuri** | Vecchi modelli o ECU non patchati con protocolli obsoleti → sfruttamento di vulnerabilità note. |
 
 ---
 
-## 14. Allineamento normativo e interoperabilità
-21. **REG-ST-01 – Mappature**  
-    * **MUST** essere mantenuto un documento di tracciabilità che colleghi ogni regola ai controlli ISO 27002, OWASP SAMM, NIST SSDF, NIS2.  
-    * Utile in audit per dimostrare copertura end-to-end.
+## Reference
+
+* The OWASP Testing Framework https://owasp.org/www-project-web-security-testing-guide/v42/3-The_OWASP_Testing_Framework/0-The_Web_Security_Testing_Framework
+* Top 10 Automotive Security Vulnerabilities https://cheatsheetseries.owasp.org/cheatsheets/Automotive_Security.html
+
+
