@@ -1,0 +1,3 @@
+[submodule "scar4sud-arch"]
+	path = scar4sud-arch
+	url = https://github.com/SCAR4SUD/D3_OMNeT_SCAR4SUD_ARCH.git
